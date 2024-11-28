@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 import time
 
 # Titre principal de l'application
-st.markdown("<h1 style='text-align: center; color: blue;'>AIMS COOP INNOVATION 2024 GROUPE 4</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: blue;'>AIMS COOP INNOVATION 2024 GROUPE 7</h1>", unsafe_allow_html=True)
 
 # Description de l'application
 with st.expander("Click here to learn more about the application"):
@@ -175,6 +175,8 @@ def local_css(file_name):
 # Fonction pour scraper les données sur le refrigerateurs-congelateurs
 
 def load_refrigerateurs_congelateurs(number_page):
+
+    
     df = pd.DataFrame()
     for p in range(1, int(number_page) + 1):
         url = f'https://www.expat-dakar.com/refrigerateurs-congelateurs?page={p}'
@@ -218,113 +220,157 @@ def load_refrigerateurs_congelateurs(number_page):
     return df
 
 def load_cuisiniere_fours(number_page):
-	
-	df = pd.DataFrame()
-	
-	for p in range(1,int(number_page) + 1):
 
-		url = f'https://www.expat-dakar.com/cuisinieres-fours?page={p}'
-		res = get(url)
-		soup = bs(res.text , 'html.parser')
-		containers = soup.find_all('div', class_= 'listing-card listing-card--tab listing-card--has-contact listing-card--has-content')
-		data = []
-		for container in containers:
-			try:
-				ontainer = containers[0]
-				detail = container.find("div", class_="listing-card__header__title").text.strip()
-				prices = container.find("span",class_="listing-card__price__value 1").text.strip().split()
-				price = "".join(prices[0:2])
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    
+    df = pd.DataFrame()
+    
+    for p in range(1, int(number_page) + 1):
+        url = f'https://www.expat-dakar.com/cuisinieres-fours?page={p}'
+        res = req.get(url, headers=headers)
+        
+        if res.status_code == 200:
+            soup = bs(res.text, 'html.parser')
+            containers = soup.find_all('div', class_='listing-card listing-card--tab listing-card--has-contact listing-card--has-content')
+            
+            data = []
+            for container in containers:
+                try:
+                    detail = container.find("div", class_="listing-card__header__title").text.strip()
+                    prices = container.find("span", class_="listing-card__price__value 1").text.strip().split()
+                    price = "".join(prices[0:2])
 
-				etat_cuisinier = container.find("span", class_="listing-card__header__tags__item listing-card__header__tags__item--condition listing-card__header__tags__item--condition_new").text
-				adresse = container.find("div", class_= "listing-card__header__location").text.strip().replace(",\n ", "").split()
-				adress = " ".join(adresse)
-				image_link = container.find("div",class_= "listing-card__image__inner").img["src"]
+                    etat_cuisinier = container.find("span", class_="listing-card__header__tags__item listing-card__header__tags__item--condition listing-card__header__tags__item--condition_new")
+                    etat_cuisinier = etat_cuisinier.text.strip() if etat_cuisinier else "Non spécifié"
+                    
+                    adresse = container.find("div", class_="listing-card__header__location")
+                    adresse = adresse.text.strip().replace(",\n ", "").split() if adresse else ["Adresse non précisée"]
+                    adress = " ".join(adresse)
+                    
+                    image_link = container.find("div", class_="listing-card__image__inner").img["src"] if container.find("div", class_="listing-card__image__inner") else "Image non disponible"
 
-				dic = {'details': detail,
-					'price': price,
-					'eta_clim':etat_cuisinier,
-					'adresses': adress,
-					'image_link':image_link,
-					}
-				data.append(dic)
-			except:
-				pass
+                    dic = {'details': detail,
+                           'price': price,
+                           'etat_clim': etat_cuisinier,
+                           'adresses': adress,
+                           'image_link': image_link}
+                    data.append(dic)
+                except Exception as e:
+                    print(f"Erreur lors de l'extraction des données: {e}")
+                    pass
 
-		DF = pd.DataFrame(data)
-		df= pd.concat([df, DF], axis =0).reset_index(drop = True)
-		
-	return df
+            DF = pd.DataFrame(data)
+            df = pd.concat([df, DF], axis=0).reset_index(drop=True)
+        else:
+            print(f"Erreur de récupération de la page {p} : Status {res.status_code}")
+    
+    return df
 
 
 def load_Machine_laver(number_page):
 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
     df = pd.DataFrame()
-    for p in range(1,int(number_page)+1):
-        url = f'https://www.expat-dakar.com/machines-a-laver?page{p}'
-        res = get(url)
-        soup = bs(res.text , 'html.parser')
-        containers = soup.find_all('div', class_ = 'listing-card listing-card--tab listing-card--has-contact listing-card--has-content')
+
+    for p in range(1, int(number_page) + 1):
+        url = f'https://www.expat-dakar.com/machines-a-laver?page={p}'
+        res = get(url, headers=headers)
+        soup = bs(res.text, 'html.parser')
+
+        containers = soup.find_all('div', class_='listing-card listing-card--tab listing-card--has-contact listing-card--has-content')
         data = []
+
         for container in containers:
             try:
-                container = containers[0]
                 detail = container.find("div", class_="listing-card__header__title").text.strip()
-                prices = container.find("span",class_="listing-card__price__value 1").text.strip().split()
+                
+                # Correction des prix
+                prices = container.find("span", class_="listing-card__price__value").text.strip().split()
                 price = "".join(prices[0:2])
 
+                # Etat de la machine
                 etat_machine = container.find("span", class_="listing-card__header__tags__item listing-card__header__tags__item--condition listing-card__header__tags__item--condition_used-abroad").text
-                adresse = container.find("div", class_= "listing-card__header__location").text.strip().replace(",\n ", "").split()
-                adress = " ".join(adresse)
-                image_link = container.find("div",class_= "listing-card__image__inner").img["src"]
 
-                dic = {'details': detail,
+                # Adresse
+                adresse = container.find("div", class_="listing-card__header__location").text.strip().replace(",\n ", "").split()
+                adress = " ".join(adresse)
+
+                # Lien de l'image
+                image_link = container.find("div", class_="listing-card__image__inner").img["src"]
+
+                dic = {
+                    'details': detail,
                     'price': price,
-                    'eta_clim':etat_machine,
+                    'etat_machine': etat_machine,
                     'adresses': adress,
-                    'image_link':image_link,
-                    }
+                    'image_link': image_link,
+                }
+
                 data.append(dic)
-            except:
+
+            except Exception as e:
+                print(f"Erreur: {e}")
                 pass
 
         DF = pd.DataFrame(data)
-        df= pd.concat([df, DF], axis =0).reset_index(drop = True)
-        
+        df = pd.concat([df, DF], axis=0).reset_index(drop=True)
+
     return df
 
 def load_climatisation(number_page):
 
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+
     df = pd.DataFrame()
-    for p in range(1,int(number_page) + 1):
+
+    for p in range(1, int(number_page) + 1):
         url = f'https://www.expat-dakar.com/climatisation?page={p}'
-        res = get(url)
-        soup = bs(res.text , 'html.parser')
-        containers = soup.find_all("div", class_= "listing-card listing-card--tab listing-card--has-contact listing-card--has-content")
+        res = get(url, headers=headers)
+        soup = bs(res.text, 'html.parser')
+        
+        containers = soup.find_all("div", class_="listing-card listing-card--tab listing-card--has-contact listing-card--has-content")
         data = []
+        
         for container in containers:
             try:
                 details = container.find("div", class_="listing-card__header__title").text.strip()
+
+                # Etat de la climatisation
                 etat_frigo = container.find("span", class_="listing-card__header__tags__item listing-card__header__tags__item--condition listing-card__header__tags__item--condition_new").text.strip()
-                adresses= container.find("div", class_="listing-card__header__location").text.strip().split()
-                adress="".join(adresses)
-                prices2 = container.find("span",class_= "listing-card__price__value 1").text.strip().split()
-                price2 = "".join(prices1[0:2])
-                image_link = container.find("div",class_= "listing-card__image__inner").img["src"]
 
+                # Adresse
+                adresses = container.find("div", class_="listing-card__header__location").text.strip().split()
+                adress = " ".join(adresses)
 
-                dic = {'details': details,
-                    'price1': price1,
-                    #'price2': price2,
-                    'eta_frigo':etat_frigo,
+                # Prix
+                prices2 = container.find("span", class_="listing-card__price__value").text.strip().split()
+                price2 = "".join(prices2[0:2])
+
+                # Lien de l'image
+                image_link = container.find("div", class_="listing-card__image__inner").img["src"]
+
+                dic = {
+                    'details': details,
+                    'price': price2,  # Correction ici pour utiliser 'price2'
+                    'eta_frigo': etat_frigo,
                     'adresses': adress,
-                    'image_link':image_link,
-                        }
+                    'image_link': image_link,
+                }
+
                 data.append(dic)
-            except:
+
+            except Exception as e:
+                print(f"Erreur: {e}")
                 pass
+
         DF = pd.DataFrame(data)
-        df= pd.concat([df, DF], axis =0).reset_index(drop = True)
-        
+        df = pd.concat([df, DF], axis=0).reset_index(drop=True)
+
     return df
 
 
