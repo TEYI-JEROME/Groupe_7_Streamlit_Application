@@ -373,7 +373,7 @@ elif Choices == 'Download scraped data':
     load(refrigerateurs_congelateurs, 'refrigerateurs congelateurs', '1', '214')
     load(cuisiniere_fours, 'cuisiniere and four', '1', '87')
     load(Machine_laver,'Machine a laver','1','68')
-    load(climatisation, 'Climatisation')
+    load(climatisation, 'Climatisation','1','139')
 
 elif Choices == 'Dashbord of the data':
     # Charger les données
