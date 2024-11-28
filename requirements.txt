@@ -8,4 +8,3 @@ streamlit
 seaborn
 pybase64
 time
-openpyxl
