@@ -227,7 +227,7 @@ def load_cuisiniere_fours(number_page):
     
     for p in range(1, int(number_page) + 1):
         url = f'https://www.expat-dakar.com/cuisinieres-fours?page={p}'
-        res = req.get(url, headers=headers)
+        res = get(url, headers=headers)
         
         if res.status_code == 200:
             soup = bs(res.text, 'html.parser')
