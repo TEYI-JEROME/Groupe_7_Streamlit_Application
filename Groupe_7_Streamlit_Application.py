@@ -260,7 +260,7 @@ def load_cuisiniere_fours(number_page):
 def load_Machine_laver(number_page):
 
     df = pd.DataFrame()
-    for p in range(1,int(number_page) + 14):
+    for p in range(1,int(number_page)+1):
         url = f'https://www.expat-dakar.com/machines-a-laver?page{p}'
         res = get(url)
         soup = bs(res.text , 'html.parser')
