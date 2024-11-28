@@ -178,9 +178,21 @@ def load_refrigerateurs_congelateurs(number_page):
     df = pd.DataFrame()
     for p in range(1, int(number_page) + 1):
         url = f'https://www.expat-dakar.com/refrigerateurs-congelateurs?page={p}'
-        res = get(url)        
+        res = get(url)
+        
+        # Vérifier si la page a été correctement récupérée
+        if res.status_code != 200:
+            print(f"Erreur: impossible de récupérer la page {p}, statut : {res.status_code}")
+            continue
+        
         soup = bs(res.text, 'html.parser')
-        containers = soup.find_all("div", class_='listing-card listing-card--tab listing-card--has-contact listing-card--has-content')        
+        
+        # Vérifier si la page contient les éléments attendus
+        containers = soup.find_all("div", class_='listing-card listing-card--tab listing-card--has-contact listing-card--has-content')
+        if not containers:
+            print(f"Erreur: aucun conteneur trouvé sur la page {p}")
+            continue
+        
         data = []
         for container in containers:
             try:
